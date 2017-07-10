@@ -5,7 +5,7 @@ def getalldenver(city):
     cl = CraigslistHousing(site=city, category='apa',
                          filters={'max_price': 1750, 'min_price': 800})
 
-    results = cl.get_results(sort_by='newest', geotagged=True, limit=100)
+    results = cl.get_results(sort_by='newest', geotagged=True, limit=500)
     d = {}
     d_list = list()
     hownone = 0
@@ -19,7 +19,7 @@ def getalldenver(city):
         d['price'] = newprice
         d['url'] = i['url']
         geoo = i['geotag']
-        if geoo != None and haversine(city_loc, geoo) < 2:
+        if geoo != None and haversine(city_loc, geoo) < 5:
             d['lat'] = geoo[0]
             d['lon'] = geoo[1]
             d_list.append(d)
