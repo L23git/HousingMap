@@ -1,75 +1,99 @@
-from flask import Flask, request, render_template, flash, redirect, url_for, session, logging
+from flask import Flask, render_template
 from data import Articles
-from flask_mysqldb import MySQL
-from wtforms import Form, StringField, TextAreaField, PasswordField, validators
-from passlib.hash import sha256_crypt
-
+from flask_googlemaps import GoogleMaps
+from flask_googlemaps import Map
+from thecraig import getalldenver
+import time
 
 app = Flask(__name__)
+app.debug = True
+#Sets up the Google Maps api
+GoogleMaps(app, key="AIzaSyCNVF6KUM4nGz8qyqW1_aKeq82WhhLAB84")
 
-#Config MySQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root'
-app.config['MYSQL_DB'] = 'MyFlaskApp'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-
-#Initialize MYSQL
-mysql = MySQL(app)
-
-
-Articles = Articles()
-
+Articles= Articles()
 
 @app.route('/')
 def index():
     return render_template('home.html')
 
+@app.route('/map')
+def map():
+    #Grab denver xities
+    da_marks = grab_markers('denver')
+    # creating a map in the view
+    mymap = Map(
+        identifier="view-side",
+        lat=39.740972,
+        lng=-104.989041,
+    	zoom= 13,
+        style="height:620px;width:1100px;margin:0;",
+        markers= da_marks
+    )
+    return render_template('map.html', mymap=mymap)
+
+def grab_markers(city):
+    #Get all the new Denver house listings
+    new_houses = getalldenver(city)
+    da_marks = list()
+    for i in new_houses:
+        if i['price'] > 1400:
+            pindex = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        elif i['price'] > 1200:
+            pindex = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+        else:
+            pindex = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+        new_mark =   {
+            'icon': pindex,
+            'lat': i['lat'],
+            'lng': i['lon'],
+            'infobox': "<a href="+i['url']+">Promising House"
+            }
+        da_marks.append(new_mark)
+    return da_marks
+
+@app.route('/denver')
+def denver():
+    #Grab denver xities
+    da_marks = grab_markers('denver')
+    # creating a map in the view
+    mymap = Map(
+        identifier="view-side",
+        lat=39.740972,
+        lng=-104.989041,
+    	zoom= 13,
+        style="height:620px;width:1100px;margin:0;",
+        markers= da_marks
+    )
+    return render_template('boulder.html', mymap=mymap)
+
+@app.route('/boulder')
+def boulder():
+    #Grab denver xities
+    da_marks = grab_markers('boulder')
+    # creating a map in the view
+    mymap = Map(
+        identifier="view-side",
+        lat=40.014204,
+        lng=-105.270449,
+    	zoom= 13,
+        style="height:620px;width:1100px;margin:0;",
+        markers= da_marks
+    )
+    return render_template('boulder.html', mymap=mymap)
+
+
 @app.route('/about')
 def about():
     return render_template('about.html')
-
 
 @app.route('/articles')
 def articles():
     return render_template('articles.html', articles = Articles)
 
-
-@app.route('/article/<string:id>/')
-def article(id):
-    return render_template('article.html', id=id)
-
-class RegisterForm(Form):
-    name = StringField("Name", [validators.Length(min=1, max=50)])
-    username = StringField("Username", [validators.Length(min=4, max=25)])
-    email = StringField("Email", [validators.Length(min=6, max=50)])
-    password = PasswordField("Password", [
-        validators.DataRequired(),
-        validators.EqualTo('confirm', message="Passwords do not match")
-    ])
-    confirm = PasswordField("Confirm Password")
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        name = form.name.data
-        email = form.email.data
-        username = form.usernmae.data
-        password = sha256_crypt.encrypt(str(form.password.data))
-
-        #create cursor
-        cur = mysql.connection.cursor()
-        cur.execute("INSERT INTO Users(name, email, username, password) VALUES (%s, %s, %s, %s) ", (name, email, username, password))
-        mysql.connection.commit()
-        #close connection
-        cur.close()
-        flash("You are now registered", 'success')
-        return redirect(url_for("index"))
+@app.route('/article/<string:title>/')
+def article(title):
+    return render_template('article.html', title=title)
 
 
-        return render_template('register.html', form=form)
-    return render_template('register.html', form=form)
-
-if __name__ == '__main__':
-    app.secret_key='secret123'
-    app.run(debug = True)
+if __name__ == "__main__":
+    app.run()

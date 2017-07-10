@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
-      <meta charset="utf-8">
-      <title>MyFlaskApp</title>
-      <link rel="stylesheeet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    </head>
+    <meta charset="utf-8">
+    <title>Gmaps</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" ></link>
+  </head>
   <body>
-    {% include 'includes/_navbar.html' %}
-    <div class='container'>
-      {% include 'includes/_messages.html' %}
-    {%block body%}{%endblock%}
+  {% include 'includes/_navbar.html' %}
+  <div class="container">
+    {% block body %}
+    {% endblock %}
   </div>
-
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
-
-
+    <source src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></source>
   </body>
 </html>
