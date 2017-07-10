@@ -64,7 +64,7 @@ def denver():
         style="height:620px;width:1100px;margin:0;",
         markers= da_marks
     )
-    return render_template('boulder.html', mymap=mymap)
+    return render_template('denver.html', mymap=mymap)
 
 @app.route('/boulder')
 def boulder():
