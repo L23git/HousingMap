@@ -3,7 +3,7 @@ from haversine import haversine
 
 def getalldenver(city):
     cl = CraigslistHousing(site=city, category='apa',
-                         filters={'max_price': 1750, 'min_price': 800})
+                         filters={'max_price': 1750, 'min_price': 20})
 
     results = cl.get_results(sort_by='newest', geotagged=True, limit=500)
     d = {}
@@ -26,7 +26,7 @@ def getalldenver(city):
     return d_list
 
 def main():
-    getalldenver()
+    getalldenver('denver')
 
 if __name__ == "__main__":
     main()
