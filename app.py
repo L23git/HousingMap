@@ -27,10 +27,16 @@ GoogleMaps(app, key="AIzaSyCNVF6KUM4nGz8qyqW1_aKeq82WhhLAB84")
 def index():
     return render_template('home.html')
 
+#Class for getting price ranges
+class MapFilterForm(Form):
+    upper_limit = StringField('Max Price', [validators.Length(min=1, max=6)])
+    lower_limit = StringField('Min Price', [validators.Length(min=4, max=25)])
+
 @app.route('/map')
 def map():
+    form = MapFilterForm(request.form)
     #Grab denver xities
-    da_marks = grab_markers('denver')
+    da_marks = grab_markers('denver', 1200, 1400)
     # creating a map in the view
     mymap = Map(
         identifier="view-side",
@@ -40,22 +46,42 @@ def map():
         style="height:620px;width:1100px;margin:0;",
         markers= da_marks
     )
-    return render_template('map.html', mymap=mymap)
+    return render_template('map.html', form=form, mymap=mymap)
 
-def grab_markers(city):
+@app.route('/map', methods=['POST'])
+def mapGetPost():
+    form = MapFilterForm(request.form)
+    lower_limit = int(form.lower_limit.data)
+    upper_limit = int(form.upper_limit.data)
+    da_marks = grab_markers('denver', lower_limit, upper_limit)
+    mymap = Map(
+        identifier="view-side",
+        lat=39.740972,
+        lng=-104.989041,
+        zoom = 13,
+        style="height:620px;width:1100px;margin:0;",
+        markers = da_marks
+    )
+    return render_template('map.html', form=form, mymap=mymap)
+
+
+def grab_markers(city, lower_limit=0, upper_limit=9999):
     #Get all the new Denver house
     #Create a cursor
     new_houses = []
     cur = mysql.connection.cursor()
     #Get articles
-    result = cur.execute("SELECT price, url, lat, lon FROM LOCATION WHERE city=%s AND radius < 6", [city])
+    result = cur.execute("SELECT price, url, lat, lon FROM LOCATION WHERE \
+        city=%s AND radius < 6 AND price < %s AND price > %s", \
+        [city, upper_limit, lower_limit])
     allinfo = cur.fetchall()
     da_marks = []
     da_marks = list()
+    price_dif = upper_limit - 400
     for i in allinfo:
-        if i['price'] > 1400:
+        if i['price'] > price_dif:
             pindex = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-        elif i['price'] > 1200:
+        elif i['price'] > (price_dif-200):
             pindex = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
         else:
             pindex = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
