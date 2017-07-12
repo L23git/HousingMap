@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+{% block body %}
+<h2>The city of {{cityP}} data</h2>
+{% from "includes/_formhelpers.html" import render_field %}
+<form method="POST" actiot="">
+  <div class="form-group">
+    {{render_field(form.upper_limit, class_="form-control")}}
+  </div>
+  <div class="form-group">
+    {{render_field(form.lower_limit, class_="form-control")}}
+  </div>
+      <p><input type="submit" class="btn btn-primary" value="Submit"></p>
+    </form>
+{{mymap.js}}
+{{mymap.html}}
+{% endblock %}

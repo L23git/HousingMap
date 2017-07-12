@@ -36,7 +36,7 @@ class MapFilterForm(Form):
 def map():
     form = MapFilterForm(request.form)
     #Grab denver xities
-    da_marks = grab_markers('denver', 1200, 1400)
+    da_marks = grab_markers('denver')
     # creating a map in the view
     mymap = Map(
         identifier="view-side",
@@ -75,13 +75,11 @@ def grab_markers(city, lower_limit=0, upper_limit=9999):
         city=%s AND radius < 6 AND price < %s AND price > %s", \
         [city, upper_limit, lower_limit])
     allinfo = cur.fetchall()
-    da_marks = []
     da_marks = list()
-    price_dif = upper_limit - 400
     for i in allinfo:
-        if i['price'] > price_dif:
+        if i['price'] > 1600:
             pindex = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
-        elif i['price'] > (price_dif-200):
+        elif i['price'] > 1200:
             pindex = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
         else:
             pindex = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
@@ -94,40 +92,64 @@ def grab_markers(city, lower_limit=0, upper_limit=9999):
         da_marks.append(new_mark)
     return da_marks
 
-@app.route('/denver')
-def denver():
-    da_marks = grab_markers('denver')
-    # creating a map in the view
-    mymap = Map(
-        identifier="view-side",
-        lat=39.740972,
-        lng=-104.989041,
-    	zoom= 13,
-        style="height:620px;width:1100px;margin:0;",
-        markers= da_marks
-    )
-    return render_template('denver.html', mymap=mymap)
-
-@app.route('/boulder')
-def boulder():
-    #Grab denver xities
-    da_marks = grab_markers('boulder')
-    # creating a map in the view
-    mymap = Map(
-        identifier="view-side",
-        lat=40.014204,
-        lng=-105.270449,
-    	zoom= 13,
-        style="height:620px;width:1100px;margin:0;",
-        markers= da_marks
-    )
-    return render_template('boulder.html', mymap=mymap)
-
-
 @app.route('/about')
 def about():
     return render_template('about.html')
 
+
+@app.route('/select')
+def select():
+    #Create a cursor
+    cur = mysql.connection.cursor()
+    #Get articles
+    result = cur.execute("SELECT DISTINCT city FROM LOCATION")
+    cities = cur.fetchall()
+    cityHolder = [i['city'] for i in cities]
+    if result > 0:
+        return render_template('select.html', cities=cityHolder)
+    else:
+        msg = 'No Houses found'
+        return render_template('select.html', msg=msg)
+    cur.close()
+
+@app.route('/city/<string:city>/', methods=['GET', 'POST'])
+def citylink(city):
+    if request.method == 'POST':
+        form = MapFilterForm(request.form)
+        lower_limit = int(form.lower_limit.data)
+        upper_limit = int(form.upper_limit.data)
+        da_marks = grab_markers(city, lower_limit, upper_limit)
+        city_coords = getCityCoord(city)
+        mymap = Map(
+            identifier="view-side",
+            lat=city_coords[0],
+            lng=city_coords[1],
+            zoom = 13,
+            style="height:620px;width:1100px;margin:0;",
+            markers = da_marks
+        )
+        return render_template('city.html', form=form, cityP = city, mymap=mymap)
+    else:
+        form = MapFilterForm(request.form)
+        #Grab xities
+        da_marks = grab_markers(city)
+        city_coords = getCityCoord(city)
+        # creating a map in the view
+        mymap = Map(
+            identifier="view-side",
+            lat=city_coords[0],
+            lng=city_coords[1],
+    	    zoom= 13,
+            style="height:620px;width:1100px;margin:0;",
+            markers= da_marks
+        )
+        return render_template('city.html', cityP=city, form=form, mymap=mymap)
+
+def getCityCoord(city):
+    city_key = {}
+    city_key['denver'] = (39.740972, -104.989041)
+    city_key['boulder'] = (40.014204, -105.270449)
+    return city_key[city]
 @app.route('/articles')
 def articles():
     #Create a cursor
