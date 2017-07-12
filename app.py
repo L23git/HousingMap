@@ -1,11 +1,9 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, logging, request
-from data import Articles
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from flask_googlemaps import GoogleMaps
 from flask_googlemaps import Map
-from thecraig import getalldenver
 import time
 from functools import wraps
 
@@ -24,8 +22,6 @@ mysql = MySQL(app)
 app.debug = True
 #Sets up the Google Maps api
 GoogleMaps(app, key="AIzaSyCNVF6KUM4nGz8qyqW1_aKeq82WhhLAB84")
-
-Articles= Articles()
 
 @app.route('/')
 def index():
@@ -47,10 +43,16 @@ def map():
     return render_template('map.html', mymap=mymap)
 
 def grab_markers(city):
-    #Get all the new Denver house listings
-    new_houses = getalldenver(city)
+    #Get all the new Denver house
+    #Create a cursor
+    new_houses = []
+    cur = mysql.connection.cursor()
+    #Get articles
+    result = cur.execute("SELECT price, url, lat, lon FROM LOCATION WHERE city=%s AND radius < 6", [city])
+    allinfo = cur.fetchall()
+    da_marks = []
     da_marks = list()
-    for i in new_houses:
+    for i in allinfo:
         if i['price'] > 1400:
             pindex = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
         elif i['price'] > 1200:
@@ -68,7 +70,6 @@ def grab_markers(city):
 
 @app.route('/denver')
 def denver():
-    #Grab denver xities
     da_marks = grab_markers('denver')
     # creating a map in the view
     mymap = Map(

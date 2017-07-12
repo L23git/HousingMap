@@ -1,0 +1,7 @@
+city
+price
+lat
+lon
+url
+radius
+
