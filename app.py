@@ -27,43 +27,14 @@ GoogleMaps(app, key="AIzaSyCNVF6KUM4nGz8qyqW1_aKeq82WhhLAB84")
 def index():
     return render_template('home.html')
 
+@app.route('/bookmarks')
+def bookmarks():
+    return render_template('bookmarks.html')
+
 #Class for getting price ranges
 class MapFilterForm(Form):
     upper_limit = StringField('Max Price', [validators.Length(min=1, max=6)])
     lower_limit = StringField('Min Price', [validators.Length(min=4, max=25)])
-
-@app.route('/map')
-def map():
-    form = MapFilterForm(request.form)
-    #Grab denver xities
-    da_marks = grab_markers('denver')
-    # creating a map in the view
-    mymap = Map(
-        identifier="view-side",
-        lat=39.740972,
-        lng=-104.989041,
-    	zoom= 13,
-        style="height:620px;width:1100px;margin:0;",
-        markers= da_marks
-    )
-    return render_template('map.html', form=form, mymap=mymap)
-
-@app.route('/map', methods=['POST'])
-def mapGetPost():
-    form = MapFilterForm(request.form)
-    lower_limit = int(form.lower_limit.data)
-    upper_limit = int(form.upper_limit.data)
-    da_marks = grab_markers('denver', lower_limit, upper_limit)
-    mymap = Map(
-        identifier="view-side",
-        lat=39.740972,
-        lng=-104.989041,
-        zoom = 13,
-        style="height:620px;width:1100px;margin:0;",
-        markers = da_marks
-    )
-    return render_template('map.html', form=form, mymap=mymap)
-
 
 def grab_markers(city, lower_limit=0, upper_limit=9999):
     #Get all the new Denver house
